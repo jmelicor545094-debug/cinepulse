@@ -32,11 +32,25 @@ function getUsers() {
 }
 
 function isLoggedIn() {
-    return !empty($_SESSION['logged_in_user']);
+    if (!empty($_SESSION['logged_in_user'])) {
+        return true;
+    }
+    if (!empty($_COOKIE['cinepulse_user'])) {
+        $userData = json_decode($_COOKIE['cinepulse_user'], true);
+        if (!empty($userData) && is_array($userData)) {
+            $_SESSION['logged_in_user'] = $userData;
+            return true;
+        }
+    }
+    return false;
 }
 
 function requireLogin() {
     if (!isLoggedIn()) {
+        $currentPage = basename($_SERVER['PHP_SELF'] ?? '');
+        if ($currentPage === 'login.php') {
+            return;
+        }
         $target = urlencode($_SERVER['REQUEST_URI'] ?? 'index.php');
         header("Location: login.php?msg=login_required&redirect={$target}");
         exit;
@@ -44,7 +58,10 @@ function requireLogin() {
 }
 
 function getCurrentUser() {
-    return $_SESSION['logged_in_user'] ?? null;
+    if (isLoggedIn()) {
+        return $_SESSION['logged_in_user'] ?? null;
+    }
+    return null;
 }
 
 function loginUser($usernameOrEmail, $password) {
@@ -54,14 +71,17 @@ function loginUser($usernameOrEmail, $password) {
     foreach ($users as $user) {
         if (strtolower($user['username']) === $input || strtolower($user['email']) === $input) {
             if (password_verify($password, $user['password'])) {
-                $_SESSION['logged_in_user'] = [
+                $userData = [
                     'id' => $user['id'],
                     'username' => $user['username'],
                     'email' => $user['email'],
                     'avatar' => $user['avatar'] ?? '😎',
                     'created_at' => $user['created_at'] ?? date('Y-m-d')
                 ];
-                return ['success' => true, 'user' => $_SESSION['logged_in_user']];
+                $_SESSION['logged_in_user'] = $userData;
+                // Persistent cookie for serverless compatibility across lambdas
+                setcookie('cinepulse_user', json_encode($userData), time() + (86400 * 30), "/");
+                return ['success' => true, 'user' => $userData];
             }
         }
     }
@@ -71,5 +91,6 @@ function loginUser($usernameOrEmail, $password) {
 
 function logoutUser() {
     unset($_SESSION['logged_in_user']);
+    setcookie('cinepulse_user', '', time() - 3600, "/");
     session_destroy();
 }

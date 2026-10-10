@@ -24,7 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $res = loginUser($username, $password);
     if ($res['success']) {
-        header('Location: ' . (empty($redirect) ? 'index.php' : $redirect));
+        $target = (!empty($redirect) && strpos($redirect, 'login.php') === false) ? $redirect : 'index.php';
+        header('Location: ' . $target);
         exit;
     } else {
         $error = $res['message'];
@@ -33,7 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Redirect if already logged in
 if (isLoggedIn()) {
-    header('Location: index.php');
+    $target = (!empty($redirect) && strpos($redirect, 'login.php') === false) ? $redirect : 'index.php';
+    header('Location: ' . $target);
     exit;
 }
 
