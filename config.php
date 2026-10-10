@@ -4,6 +4,10 @@
  * Project: CinePulse - PHP & TMDB Movie Application
  */
 
+// Suppress deprecation warnings in production
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE);
+ini_set('display_errors', '0');
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -51,7 +55,7 @@ function getTMDBData($endpoint, $params = []) {
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curlError = curl_error($ch);
-    curl_close($ch);
+    @curl_close($ch);
 
     if ($httpCode !== 200 || !$response) {
         return [
