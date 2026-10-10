@@ -53,6 +53,6 @@
 <?php require_once __DIR__ . '/key_modal.php'; ?>
 
 <!-- Main App JavaScript -->
-<script src="assets/js/app.js"></script>
+<script src="/assets/js/app.js"></script>
 </body>
 </html>
