@@ -9,28 +9,26 @@ if (session_status() === PHP_SESSION_NONE) {
 
 define('USERS_FILE', __DIR__ . '/data/users.json');
 
-// Ensure data directory exists
-if (!is_dir(__DIR__ . '/data')) {
-    mkdir(__DIR__ . '/data', 0777, true);
+function getDefaultUsers() {
+    return [
+        [
+            'id' => 1,
+            'username' => 'joshuagwapo',
+            'email' => 'joshua@cinepulse.com',
+            'password' => '$2y$10$gGqNsveiOo6Cdu1Y53q/D.lOXbcTBePqet6B9SuWL6MT3bbyUeQeS',
+            'created_at' => '2026-10-09 19:03:25',
+            'avatar' => '😎'
+        ]
+    ];
 }
 
-// Ensure default user joshuagwapo is saved
-$defaultUsers = [
-    [
-        'id' => 1,
-        'username' => 'joshuagwapo',
-        'email' => 'joshua@cinepulse.com',
-        'password' => password_hash('mamagwapa12', PASSWORD_BCRYPT),
-        'created_at' => date('Y-m-d H:i:s'),
-        'avatar' => '😎'
-    ]
-];
-file_put_contents(USERS_FILE, json_encode($defaultUsers, JSON_PRETTY_PRINT));
-
 function getUsers() {
-    if (!file_exists(USERS_FILE)) return [];
-    $data = file_get_contents(USERS_FILE);
-    return json_decode($data, true) ?: [];
+    if (!file_exists(USERS_FILE)) {
+        return getDefaultUsers();
+    }
+    $data = @file_get_contents(USERS_FILE);
+    $users = json_decode($data, true);
+    return !empty($users) ? $users : getDefaultUsers();
 }
 
 function isLoggedIn() {
